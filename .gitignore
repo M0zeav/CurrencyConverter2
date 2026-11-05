@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Currency converter runtime data
+**/App_Data/
+TestResults/
+*.pfx
+*.mobileprovision

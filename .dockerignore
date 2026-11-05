@@ -1,0 +1,6 @@
+**/bin
+**/obj
+.vs
+.git
+TestResults
+**/App_Data

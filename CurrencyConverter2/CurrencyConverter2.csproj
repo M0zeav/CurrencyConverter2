@@ -21,7 +21,7 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>CurrencyConverter2</ApplicationTitle>
+		<ApplicationTitle>Конвертер валют</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.currencyconverter2</ApplicationId>
@@ -60,8 +60,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.120" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
 	</ItemGroup>
 
+  <PropertyGroup>
+    <TargetFrameworks Condition="'$(BuildTarget)' != ''">$(BuildTarget)</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\CurrencyConverter.Core\CurrencyConverter.Core.csproj" />
+    <Compile Remove="AppShell.xaml.cs" />
+    <MauiXaml Remove="AppShell.xaml" />
+  </ItemGroup>
 </Project>

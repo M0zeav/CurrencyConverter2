@@ -1,0 +1,9 @@
+[
+  {
+    "Name": "Сервер и приложение",
+    "Projects": [
+      { "Path": "src\\CurrencyConverter.Server\\CurrencyConverter.Server.csproj", "Action": "StartWithoutDebugging" },
+      { "Path": "CurrencyConverter2\\CurrencyConverter2.csproj", "Action": "Start" }
+    ]
+  }
+]

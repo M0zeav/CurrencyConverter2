@@ -1,0 +1,89 @@
+name: Build and test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: '1'
+jobs:
+  tests-and-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Run unit tests
+        run: dotnet test tests/CurrencyConverter.Tests/CurrencyConverter.Tests.csproj -c Release --logger "trx;LogFileName=tests.trx" --results-directory TestResults
+      - name: Publish server
+        run: dotnet publish src/CurrencyConverter.Server/CurrencyConverter.Server.csproj -c Release -o artifacts/server
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults/*.trx
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server
+          path: artifacts/server
+  android-and-windows:
+    needs: tests-and-server
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: net9.0-android
+            name: android
+            workload: maui-android
+          - target: net9.0-windows10.0.19041.0
+            name: windows
+            workload: maui-windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: '17'
+      - name: Install MAUI workload
+        run: dotnet workload install ${{ matrix.workload }} --version 9.0.314.3
+      - name: Build MAUI application
+        run: dotnet build CurrencyConverter2/CurrencyConverter2.csproj -c Debug -f ${{ matrix.target }} -p:BuildTarget=${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-debug
+          path: CurrencyConverter2/bin/Debug/${{ matrix.target }}/
+  apple:
+    needs: tests-and-server
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: net9.0-ios
+            runtime: iossimulator-arm64
+            workload: maui-ios
+          - target: net9.0-maccatalyst
+            runtime: maccatalyst-arm64
+            workload: maui-maccatalyst
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Select compatible Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.5.app/Contents/Developer
+      - name: Install matching Apple workload
+        run: dotnet workload install ${{ matrix.workload }} --version 9.0.314.3
+      - name: Build unsigned simulator or desktop application
+        run: dotnet build CurrencyConverter2/CurrencyConverter2.csproj -c Debug -f ${{ matrix.target }} -p:BuildTarget=${{ matrix.target }} -p:RuntimeIdentifier=${{ matrix.runtime }} -p:EnableCodeSigning=false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.runtime }}-debug
+          path: CurrencyConverter2/bin/Debug/${{ matrix.target }}/
